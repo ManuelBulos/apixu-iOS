@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'APIXU_Example' do
+  pod 'APIXU', :path => '../'
+
+  target 'APIXU_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
