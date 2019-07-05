@@ -26,27 +26,89 @@ Access all APIs (search, current, forecast, history) with a query object.
 ```swift
     // Initialize with your own API Key
     let apixu: APIXU = APIXU(key: "yourAPIKey", debuggingEnabled: false)
+    
+    // New York coordinates
+    let coordinates: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 40.730610, longitude: -73.935242)
+    
+    // String for query
+    let city: String = "New York"
+    
+    // Date in yyyy-MM-dd format
+    let date: String = "2019-06-06"
 
-    apixu.search(matching: .coordinate2D(coordinates)) { (result) in
+    // Search with coordinates
+    apixu.search(matching: .coordinate2D(coordinates)) { [weak self] (result) in
         guard let self = self else { return }
         switch result {
         case .success(let response):
-            // [APIXU.SearchResponse]
+            // [APIXU.SearchResponse] object
             print(response.map({ $0.country })) // list of countries for the given coordinates
         case .failure(let error):
             self.showAlert(with: error) 
         }
     }
     
-    apixu.search(matching: .string("New York")) { (result) in
+    // Search with string
+    apixu.search(matching: .string(city)) { [weak self] (result) in
         guard let self = self else { return }
         switch result {
         case .success(let response):
-            // [APIXU.SearchResponse]
+            // [APIXU.SearchResponse] object
             print(response.map({ $0.country })) // list of countries for the given string
         case .failure(let error):
             self.showAlert(with: error) 
         }
+    }
+    
+    // Current (also works using string instead of coordinates)
+    apixu.current(matching: .coordinate2D(coordinates)) { [weak self] (result) in
+            guard let self = self else { return }
+            switch result {
+            case .success(let response):
+                if let errorMessage = response.error?.message {
+                    self.showAlert(with: errorMessage)
+                } else {
+                    // APIXU.Current object
+                    print(response.current)
+                }
+            case .failure(let error):
+                self.showAlert(with: error)
+            }
+    }
+      
+    // Forecast (also works using string instead of coordinates)
+    apixu.forecast(matching: .coordinate2D(coordinates), days: 5) { [weak self] (result) in
+        guard let self = self else { return }
+            switch result {
+            case .success(let response):
+                if let errorMessage = response.error?.message {
+                    self.showAlert(with: errorMessage)
+                } else {
+                    // APIXU.Forecast object
+                    print(response.forecast)
+                }
+            case .failure(let error):
+                self.showAlert(with: error)
+            }
+    }
+    
+    // History (also works using string instead of coordinates)
+    apixu.history(matching: .coordinate2D(coordinates), date: date) { [weak self] (result) in
+        guard let self = self else { return }
+            switch result {
+            case .success(let response):
+                if let errorMessage = response.error?.message {
+                self.showAlert(with: errorMessage)
+                } else {
+                    // APIXU.Forecast object
+                    /* History weather API method returns historical weather 
+                    for a date on or after 1st Jan, 2015. 
+                    The data is returned as a Forecast Object.*/
+                    print(response.forecast)
+                }
+            case .failure(let error):
+                self.showAlert(with: error)
+            }
     }
 ```
 
@@ -64,205 +126,34 @@ Access all APIs (search, current, forecast, history) with a query object.
     }
 ```
 
-## Example (ViewController.swift)
-```swift
-import UIKit
-import APIXU
-import CoreLocation
+## Models
+[SearchResponse](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Search/APIXUSearchResponse.swift)
 
-class ViewController: UIViewController {
+[Response](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Response/APIXUResponse.swift)
 
-    // MARK: - UI
+[Location](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Response/APIXULocation.swift)
 
-    @IBOutlet weak var temperatureLabel: UILabel!
-    @IBOutlet weak var conditionLabel: UILabel!
-    @IBOutlet weak var conditionImageView: UIImageView!
+[ErrorCode](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Response/APIXUErrorCode.swift)
 
-    // MARK: - Properties
+[Current](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Current/APIXUCurrent.swift)
 
-    // Initialize with your own API Key
-    private let apixu: APIXU = APIXU(key: "", debuggingEnabled: false)
+[Condition](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Response/APIXUCondition.swift)
 
-    // Updates userCoordinates
-    private let locationManager: CLLocationManager = CLLocationManager()
+[Forecast](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Forecast/APIXUForecast.swift)
 
-    // userCoordinates updates only if it's more than 5000 meters away from last location
-    private let maximumDistance: Double = 5000
+[ForecastDay](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Forecast/APIXUForecastday.swift)
 
-    private var userCoordinates: CLLocationCoordinate2D? {
-        didSet {
-            guard let coordinates = userCoordinates else { return }
-            getCurrent(for: coordinates)
-        }
-    }
+[Day](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Forecast/APIXUDay.swift)
 
-    // Lifecycle
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
-        locationManager.requestWhenInUseAuthorization()
-        locationManager.startUpdatingLocation()
-    }
+[Astro](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Forecast/APIXUAstro.swift)
 
-    // Search
-    private func performSearch(for coordinates: CLLocationCoordinate2D) {
-        apixu.search(matching: .coordinate2D(coordinates)) { [weak self] (result) in
-            guard let self = self else { return }
-            switch result {
-            case .success(let response):
-            // [APIXU.SearchResponse]
-            print(response.map({ $0.country }))
-            case .failure(let error):
-            self.showAlert(with: error) 
-            }
-        }
-    }
+[Hour](https://github.com/ManuelBulos/apixu-iOS/blob/master/Models/Forecast/APIXUHour.swift)
 
-    // Current
-    private func getCurrent(for coordinates: CLLocationCoordinate2D) {
-        apixu.current(matching: .coordinate2D(coordinates)) { [weak self] (result) in
-            guard let self = self else { return }
-            switch result {
-            case .success(let response):
-                if let errorMessage = response.error?.message {
-                    self.showAlert(with: errorMessage)
-                } else {
-                    // APIXU.Current
-                    guard let current = response.current else { return }
-                    self.handleCurrent(current)
-                }
-            case .failure(let error):
-                self.showAlert(with: error)
-            }
-        }
-    }
 
-    // Forecast
-    private func getForecast(for coordinates: CLLocationCoordinate2D) {
-        apixu.forecast(matching: .coordinate2D(coordinates), days: 5) { [weak self] (result) in
-            guard let self = self else { return }
-            switch result {
-            case .success(let response):
-                if let errorMessage = response.error?.message {
-                    self.showAlert(with: errorMessage)
-                } else {
-                    // APIXU.Forecast
-                    print(response.forecast?.forecastday?.first?.day?.avgTempC ?? String())
-                }
-            case .failure(let error):
-                self.showAlert(with: error)
-            }
-        }
-    }
+##
 
-    // History
-    private func getHistory(for coordinates: CLLocationCoordinate2D, from date: String) {
-        apixu.history(matching: .coordinate2D(coordinates), date: date) { [weak self] (result) in
-            guard let self = self else { return }
-            switch result {
-            case .success(let response):
-                if let errorMessage = response.error?.message {
-                self.showAlert(with: errorMessage)
-                } else {
-                    // APIXU.Response
-                    print(response)
-                }
-            case .failure(let error):
-                self.showAlert(with: error)
-            }
-        }
-    }
-
-    private func handleCurrent(_ current: APIXU.Current) {
-        guard let temperature: Double = current.tempC else { return }
-        guard let condition: String = current.condition?.text else { return }
-        self.temperatureLabel.text = "\(String(format: "%.0f", temperature))º"
-        self.conditionLabel.text = condition
-
-        guard let realURLString = current.condition?.icon?.dropFirst(2) else { return }
-        guard let conditionIconURL = URL(string: "https://\(realURLString)") else { return }
-
-        URLSession.shared.dataTask(with: conditionIconURL) { (data, _, error) in
-            guard let data = data else { return }
-            DispatchQueue.main.async { [weak self] in
-                self?.conditionImageView.image = UIImage(data: data)
-            }
-        }.resume()
-    }
-}
-
-// MARK: - CLLocationManagerDelegate
-
-extension ViewController: CLLocationManagerDelegate {
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let newCoordinates = locations.last?.coordinate else { return }
-        if let oldCoordinates = userCoordinates {
-            let newLocation = CLLocation(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude)
-            let oldLocation = CLLocation(latitude: oldCoordinates.latitude, longitude: oldCoordinates.longitude)
-            if oldLocation.distance(from: newLocation) > maximumDistance { userCoordinates = newCoordinates }
-        } else {
-            userCoordinates = newCoordinates
-        }
-    }
-
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        verifyAuthorization(status: status, manager: manager)
-    }
-
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        showAlert(with: error)
-    }
-
-    private func verifyAuthorization(status: CLAuthorizationStatus, manager: CLLocationManager) {
-        DispatchQueue.main.async { [weak self] in
-            if CLLocationManager.locationServicesEnabled() &&
-                status == .authorizedAlways ||
-                status == .authorizedWhenInUse {
-                manager.startUpdatingLocation()
-            } else if status == .notDetermined {
-                manager.requestWhenInUseAuthorization()
-            } else {
-                guard let self = self else { return }
-                self.showSettingsAlert()
-            }
-        }
-    }
-}
-
-// MARK: - Alerts
-
-extension ViewController {
-    func showSettingsAlert() {
-        let alert = UIAlertController(title: "Location Services disabled",
-        message: "Please enable Location Services in Settings", preferredStyle: .alert)
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-        alert.addAction(cancelAction)
-
-        let settingsAction = UIAlertAction(title: "Settings", style: .default) { (_) -> Void in
-            guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else { return }
-            if UIApplication.shared.canOpenURL(settingsUrl) {
-                UIApplication.shared.open(settingsUrl, completionHandler: { (success) in
-                print("Settings opened: \(success)")
-                })
-            }
-        }
-        alert.addAction(settingsAction)
-        present(alert, animated: true)
-    }
-
-    func showAlert(with message: String) {
-        let alert = UIAlertController(title: "Sorry", message: message, preferredStyle: .alert)
-        let okAction = UIAlertAction(title: "Ok", style: .default)
-        alert.addAction(okAction)
-        present(alert, animated: true)
-    }
-
-    func showAlert(with error: Error) {
-        showAlert(with: error.localizedDescription)
-    }
-}
-```
+## Documentation
+Official docs: https://www.apixu.com/doc/
 
 ## Author
 
