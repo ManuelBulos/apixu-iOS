@@ -25,7 +25,7 @@ pod 'APIXU'
 Access all APIs (search, current, forecast, history) with a query.
 ```swift
     // Initialize with your own API Key
-    let apixu: APIXU = APIXU(key: "yourAPIKey", debuggingEnabled: false)
+    let apixu: APIXU = APIXU(key: "yourAPIKey")
     
     // New York coordinates
     let coordinates: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 40.730610, longitude: -73.935242)
