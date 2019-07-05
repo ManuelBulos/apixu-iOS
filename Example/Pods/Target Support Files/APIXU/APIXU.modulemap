@@ -1,0 +1,6 @@
+framework module APIXU {
+  umbrella header "APIXU-umbrella.h"
+
+  export *
+  module * { export * }
+}
