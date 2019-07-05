@@ -22,7 +22,7 @@ pod 'APIXU'
 ```
 
 ## Usage
-Access all APIs (search, current, forecast, history) with a query object.
+Access all APIs (search, current, forecast, history) with a query.
 ```swift
     // Initialize with your own API Key
     let apixu: APIXU = APIXU(key: "yourAPIKey", debuggingEnabled: false)
@@ -98,7 +98,7 @@ Access all APIs (search, current, forecast, history) with a query object.
             switch result {
             case .success(let response):
                 if let errorMessage = response.error?.message {
-                self.showAlert(with: errorMessage)
+                    self.showAlert(with: errorMessage)
                 } else {
                     // APIXU.Forecast object
                     /* History weather API method returns historical weather 
@@ -112,7 +112,7 @@ Access all APIs (search, current, forecast, history) with a query object.
     }
 ```
 
-## Query object
+## Query type
 ```swift
     public enum Query {
         /// Latitude, Longitude
